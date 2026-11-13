@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#061a3a">
+<title>Design Rescue · Quizmas Game Hub</title>
+<meta name="description" content="Quizmas Season 3 graphic design game: fix Glitch's scrambled flyer before the doors open.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/baloo-2-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/nunito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div id="scenery" aria-hidden="true">
+  <div class="hills back"></div><div class="hills front"></div>
+  <div class="trees"></div>
+</div>
+
+<!-- 1. LOADER -->
+<section id="loader" class="screen active" aria-live="polite">
+  <div class="loader-card">
+    <div class="loader-ornament" aria-hidden="true">
+      <div class="orn-cap"></div>
+      <div class="orn-ball"><span></span></div>
+    </div>
+    <p class="season">QUIZMAS SEASON 3</p>
+    <h1 class="loader-title">Unwrap the Future</h1>
+    <div class="loader-bar" role="progressbar" aria-label="Loading the game" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="loader-fill"></div><div class="loader-shine"></div>
+    </div>
+    <p class="loader-status"><span id="loaderText">Wrapping your Quizmas surprise…</span> <b id="loaderPct">0%</b></p>
+    <p class="loader-tip" id="loaderTip">Tip: Good spacing lets every part of a design breathe.</p>
+  </div>
+</section>
+
+<!-- 2. GIFT (3D) -->
+<section id="gift" class="screen">
+  <div id="giftStage" aria-hidden="true"></div>
+  <div class="gift-ui">
+    <p class="season">QUIZMAS SEASON 3 · GAME HUB</p>
+    <p class="gift-hint" id="giftHint"><span class="tap-dot"></span>Tap the gift to unwrap</p>
+  </div>
+  <div class="title-reveal" id="titleReveal">
+    <p class="track">Graphic Design Track · Game 1</p>
+    <h1 class="game-title"><span>Design</span> <span>Rescue</span></h1>
+    <p class="game-sub">Fix That Flyer!</p>
+    <button class="btn btn-gold" id="startBtn">Start</button>
+  </div>
+</section>
+
+<!-- 3. ENTRY -->
+<section id="entry" class="screen">
+  <form class="panel entry-panel" id="entryForm" novalidate>
+    <h2>Who's playing?</h2>
+    <p class="muted">Your score is saved to the Quizmas leaderboard.</p>
+    <label for="playerName">Your name</label>
+    <input id="playerName" name="playerName" autocomplete="name" maxlength="40" placeholder="e.g. Ada Okafor" required>
+    <label for="quizmasId">Quizmas ID</label>
+    <input id="quizmasId" name="quizmasId" autocomplete="off" maxlength="20" placeholder="e.g. QZ-1024" required>
+    <p class="form-error" id="entryError" role="alert"></p>
+    <p class="attempt-note" id="attemptNote"></p>
+    <button class="btn btn-gold" type="submit">Continue</button>
+  </form>
+</section>
+
+<!-- 4. STORY -->
+<section id="story" class="screen">
+  <div class="story-wrap">
+    <div class="glitch-big" id="glitchStory"></div>
+    <div class="speech" id="storySpeech"></div>
+    <div class="story-card panel">
+      <h2>Your mission</h2>
+      <ol class="mission">
+        <li><b>Spot</b> the 4 design problems.</li>
+        <li><b>Fix</b> the layout by dragging things into place.</li>
+        <li><b>Finish</b> with the right final touches.</li>
+      </ol>
+      <p class="muted small">About 5 minutes · a timer runs in each stage</p>
+      <button class="btn btn-gold" id="beginBtn">I'm ready!</button>
+    </div>
+  </div>
+  <button class="skip" id="skipStory">Skip ›</button>
+</section>
+
+<!-- 5. GAME -->
+<section id="game" class="screen">
+  <header class="hud">
+    <div class="stages" id="stageDots">
+      <span data-s="1"><i>1</i><em>Spot</em></span>
+      <span data-s="2"><i>2</i><em>Fix</em></span>
+      <span data-s="3"><i>3</i><em>Final touch</em></span>
+    </div>
+    <div class="timer" id="timer"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" class="t-bg"/><circle cx="18" cy="18" r="15.5" class="t-fg" id="timerRing"/></svg><b id="timerText">1:00</b></div>
+    <button class="icon-btn" id="muteBtn" aria-label="Sound on"><span>🔊</span></button>
+  </header>
+  <div class="play">
+    <div class="flyer-area" id="flyerArea">
+      <div class="desk" id="desk"><div class="flyer-holder" id="flyerHolder"></div></div>
+    </div>
+    <aside class="side panel" id="side">
+      <div class="side-head">
+        <div class="glitch-mini" id="glitchMini"></div>
+        <div>
+          <h2 id="sideTitle">Spot the problems</h2>
+          <p id="sideText" class="muted">Tap every place where the flyer looks wrong.</p>
+        </div>
+      </div>
+      <div id="sideBody"></div>
+      <div class="side-actions" id="sideActions"></div>
+    </aside>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+</section>
+
+<!-- 6. RESULTS -->
+<section id="results" class="screen">
+  <div class="results-wrap">
+    <div class="board-scene" id="boardScene">
+      <div class="board" id="board">
+        <div class="board-snow"></div>
+        <div class="board-flyer" id="boardFlyer"></div>
+        <span class="pin p1"></span><span class="pin p2"></span>
+      </div>
+    </div>
+    <div class="panel results-panel" id="resultsPanel">
+      <p class="season" id="resultsKicker">DESIGN RESCUE · RESULTS</p>
+      <h2 id="resultsName">Well done!</h2>
+      <div class="score-ring">
+        <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="r-bg"/><circle cx="60" cy="60" r="52" class="r-fg" id="scoreRing"/></svg>
+        <div class="score-num"><b id="scoreNum">0</b><span>/ 100</span></div>
+      </div>
+      <p class="level" id="levelText"></p>
+      <p class="attempt-tag" id="attemptTag"></p>
+      <div class="breakdown" id="breakdown"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="ba" id="beforeAfter">
+        <p class="ba-label"><span>Before</span><span>After</span></p>
+        <div class="ba-frame" id="baFrame">
+          <div class="ba-layer ba-after" id="baAfter"></div>
+          <div class="ba-layer ba-before" id="baBefore"></div>
+          <div class="ba-handle" id="baHandle"><span>⇆</span></div>
+        </div>
+      </div>
+      <p class="save-status" id="saveStatus"></p>
+      <div class="results-actions">
+        <button class="btn btn-gold" id="badgeBtn">Download my Design Badge</button>
+        <button class="btn btn-ghost" id="againBtn">Play again (practice)</button>
+      </div>
+    </div>
+  </div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+</section>
+
+<noscript><p class="noscript">Design Rescue needs JavaScript turned on.</p></noscript>
+<script src="vendor/gsap.min.js"></script>
+<script src="js/config.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
