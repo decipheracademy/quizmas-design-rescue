@@ -2,7 +2,7 @@
 window.DR_CONFIG = {
   // Paste the Google Apps Script web-app URL here once the score sheet is set up.
   // While empty, scores are kept safely on the device and sent later.
-  SHEETS_URL: "",
+  SHEETS_URL: "https://script.google.com/macros/s/AKfycbzNIRSHzWooF2oLNp68XtbyCHtQu5AvMelMQ0-PJx0l84wNULsqjj8UtkDTaS5bWmGI8Q/exec",
   GAME_ID: "design-rescue",
   GAME_NAME: "Design Rescue: Fix That Flyer",
   // Seconds for each stage.
