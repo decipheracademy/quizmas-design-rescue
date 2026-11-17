@@ -44,6 +44,7 @@ main { padding-block: 22px 40px; }
 .table-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td.wrap { white-space: normal; min-width: 260px; }
 th { background: #eaf2f9; font-weight: 700; cursor: pointer; position: sticky; top: 0; user-select: none; }
 th[aria-sort="ascending"]::after { content: " ▲"; font-size: .7em; }
 th[aria-sort="descending"]::after { content: " ▼"; font-size: .7em; }
@@ -103,14 +104,23 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 <script>
 const CFG = window.DR_CONFIG;
 const $ = (id) => document.getElementById(id);
-const COLS = ["Date & time", "Name", "Quizmas ID", "Game", "Official?", "Score", "Level", "Spot (30)", "Layout (40)", "Final touch (30)", "Problems found", "Corrections", "Time (sec)", "Device"];
+const COLS = ["Date & time", "Name", "Quizmas ID", "Game", "Official?", "Score", "Level", "Breakdown", "Progress", "Time (sec)", "Device"];
 let all = [], headers = [], sortCol = "Score", sortDir = -1, keyCache = "";
 
 function fromLocal() {
+  // Test mode (no sheet connected): read the scores waiting on this device, from every Quizmas game.
   let q = [];
-  try { q = JSON.parse(localStorage.getItem("dr_queue_v1") || "[]"); } catch { q = []; }
-  headers = ["Date & time", "Name", "Quizmas ID", "Game", "Official?", "Attempt", "Score", "Max", "Level", "Spot (30)", "Layout (40)", "Final touch (30)", "Problems found", "Wrong taps", "Hint used", "Corrections", "Flyer version", "Time (sec)", "Device", "Strength", "To improve", "Game key"];
-  return q.map((r) => [r.timestamp, r.name, r.quizmasId, r.gameName, r.official ? "Official" : "Practice", r.attempt, r.score, r.maxScore, r.level, r.spotScore, r.layoutScore, r.finalTouchScore, r.problemsFound, r.wrongTaps, r.hintUsed ? "Yes" : "No", r.corrections, r.flyerVersion, r.totalSeconds, r.device, r.strength, r.improve, r.game]);
+  try {
+    for (let k = 0; k < localStorage.length; k++) {
+      const key = localStorage.key(k);
+      if (/_queue/.test(key)) q = q.concat(JSON.parse(localStorage.getItem(key) || "[]"));
+    }
+  } catch { q = []; }
+  // Same columns as the Google Sheet. Older Design Rescue results get their breakdown built here.
+  headers = ["Date & time", "Name", "Quizmas ID", "Game", "Official?", "Attempt", "Score", "Max", "Level", "Breakdown", "Progress", "Time (sec)", "Device", "Strength", "To improve", "Game key", "Details"];
+  const bd = (r) => r.breakdown || (r.spotScore !== undefined ? `Spot ${r.spotScore}/30 · Layout ${r.layoutScore}/40 · Final touch ${r.finalTouchScore}/30` : "");
+  const pr = (r) => r.progress || (r.problemsFound !== undefined ? `${r.problemsFound} problems found · ${r.corrections} corrections` : "");
+  return q.map((r) => [r.timestamp, r.name, r.quizmasId, r.gameName, r.official ? "Official" : "Practice", r.attempt, r.score, r.maxScore, r.level, bd(r), pr(r), r.totalSeconds, r.device, r.strength, r.improve, r.game, ""]);
 }
 
 async function load(key) {
@@ -158,6 +168,7 @@ function render() {
     const v = r[idx(c)];
     if (c === "Official?") return `<td><span class="pill ${String(v).toLowerCase()}">${v}</span></td>`;
     if (c === "Date & time") return `<td>${fmtDate(v)}</td>`;
+    if (c === "Breakdown") return `<td class="wrap">${v ?? ""}</td>`;
     const num = typeof v === "number";
     return `<td class="${num ? "num" : ""}">${v ?? ""}</td>`;
   }).join("") + "</tr>").join("") : `<tr><td class="empty" colspan="${COLS.length}">No scores match yet.</td></tr>`;
